@@ -1,114 +1,82 @@
 <template>
-  <div id="players">
-    <div
-      v-for="p in player"
-      :key="p.index"
-      :class="p.index == currentPlayer ? 'score-box score-current' : 'score-box'"
-    >
-      <div class="player-info">
-        <span> {{ p.name }}</span>
-        <span class="player-info-score"> {{ p.score }}</span>
-      </div>
-      <div class="score-table">
-        <table>
-          <tbody>
-            <tr>
-              <th v-for="ele in p.detail" :key="ele" :class="judge_td_style(ele[0])">
-                {{ ele[0] }}
-              </th>
-            </tr>
-            <tr v-for="index in 3" :key="index">
-              <td v-for="ele in p.detail" :key="ele" :class="judge_td_style(ele[0])">
-                {{ ele[index] }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+  <div class="player" :style="get_style()">
+    <ion-icon :icon="person" class="icon" />
+    <div class="text-wrapper">{{ name }}</div>
+    <div class="score-wrapper">{{ score }}</div>
+    <div class="rectangle" />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { IonIcon } from '@ionic/vue'
+import { person } from 'ionicons/icons'
 const props = defineProps({
-  player: Array,
-  currentRound: Number,
-  currentPlayer: Number
+  index: String,
+  name: String,
+  current: Boolean,
+  score: Number
 })
 
-function judge_td_style(index) {
-  if (index == props.currentRound) {
-    return 'th_back_on'
+function get_style() {
+  if (props.index == '1') {
+    return 'background-color: #571313;'
+  } else if (props.index == '2') {
+    return 'background-color: #305514;'
+  } else if (props.index == '3') {
+    return 'background-color: #a99608;'
+  } else if (props.index == '4') {
+    return 'background-color: #2d2d59;'
   }
 }
 </script>
 <style lang="less">
-#players {
-  position: absolute;
-  width: 800px;
-  height: 800px;
-  top: 0;
-  right: 0;
-  margin: 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.score-box {
-  width: 100%;
+.player {
+  border-radius: 10px 10px 0px 0px;
   height: 170px;
-  display: flex;
-  background-color: rgba(aliceblue, 0.1);
-  border-radius: 20px;
-  padding: 20px;
-  margin: 5px;
-}
+  position: relative;
+  width: 150px;
 
-.score-current {
-  box-shadow: inset 0 0 10px rgba(255, 150, 150, 0.8);
-}
-
-.player-info {
-  width: 300px;
-  display: flex;
-  flex-direction: column;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-size: 30px;
-  &-score {
-    font-size: 40px;
-    font-weight: 800;
-  }
-}
-
-.score-table {
-  width: 700px;
-  height: 100%;
-}
-
-.th_back_on {
-  background-color: rgba(goldenrod, 0.3);
-}
-
-table {
-  font-family: 'Oswald', sans-serif;
-  font-size: 15pt;
-  border-collapse: separate;
-  th {
-    background-color: rgba(midnightblue, 0.5);
-    color: #ffffff;
-    width: 5vw;
-    height: 20px;
-    font-weight: 800;
+  .text-wrapper {
+    position: absolute;
+    top: 10px;
+    left: -10px;
+    color: #dedccf;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 30px;
+    width: 150px;
+    text-align: right;
+    white-space: nowrap;
   }
 
-  td {
-    background-color: #363636;
-    color: #ffffff;
-    width: 5vw;
-    height: 30px;
+  .score-wrapper {
+    color: #dddbce;
+    font-family: 'Itim-Regular', Helvetica;
+    font-size: 64px;
+    font-weight: 400;
+    left: 1px;
+    letter-spacing: 0;
+    line-height: 20px;
+    position: absolute;
     text-align: center;
-    transition: all 0.3s ease-in-out;
+    top: 90px;
+    width: 150px;
+  }
+
+  .rectangle {
+    background-color: #d9d9d9;
+    border-radius: 20px;
+    height: 6px;
+    left: 20px;
+    position: absolute;
+    top: 150px;
+    width: 110px;
+  }
+
+  .icon {
+    font-size: 1.8em;
+    padding: 8px;
   }
 }
 </style>

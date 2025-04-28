@@ -20,7 +20,11 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
-    "less": "^4.2.0"
+    "@ionic/vue": "^8.5.5",
+    "@ionic/vue-router": "^8.5.5",
+    "ionicons": "^7.4.0",
+    "less": "^4.2.0",
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config": "^1.0.2",
