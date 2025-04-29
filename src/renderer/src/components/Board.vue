@@ -32,7 +32,6 @@ const emit = defineEmits(['update_score'])
 const points = ref([20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5])
 // const points = ref([20, 1])
 function board_style(i) {
-  console.log(i)
   return {
     transform: `rotate(${Number.parseInt(i) * 18}deg)`,
     '-webkit-transform': `rotate(${i * 20} deg)`
@@ -40,8 +39,7 @@ function board_style(i) {
 }
 
 function update(s, m) {
-  let result = Number.parseInt(s) * m
-  emit('update_score', result)
+  emit('update_score', Number.parseInt(s), m)
 }
 </script>
 

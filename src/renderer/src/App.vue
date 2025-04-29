@@ -1,24 +1,24 @@
 <template>
   <div class="out-box">
     <div class="board-box">
-      <Board />
+      <Board @update_score="round_handle" />
     </div>
     <div class="nav-box">
       <div class="overlap-1">
-        <ion-icon :icon="reloadOutline" class="icon" />
-        <ion-icon :icon="exitOutline" class="icon" />
+        <ion-icon :icon="reloadOutline" class="icon" @click="back()" />
+        <ion-icon :icon="exitOutline" class="icon" @click="reset()" />
       </div>
       <div class="overlap-2">
-        <div class="text-wrapper">Round 10/10</div>
+        <div class="text-wrapper">Round {{ current_round }}/10</div>
       </div>
       <div class="overlap-3">
-        <div class="text-wrapper">Single 20</div>
+        <div class="text-wrapper">{{ dart_record[0][0] }} {{ dart_record[0][1] }}</div>
       </div>
       <div class="overlap-3">
-        <div class="text-wrapper">Tripple 10</div>
+        <div class="text-wrapper">{{ dart_record[1][0] }} {{ dart_record[1][1] }}</div>
       </div>
       <div class="overlap-3">
-        <div class="text-wrapper">Double 13</div>
+        <div class="text-wrapper">{{ dart_record[2][0] }} {{ dart_record[2][1] }}</div>
       </div>
     </div>
     <div class="player-box">
@@ -28,6 +28,7 @@
         :name="obj.name"
         :score="obj.score"
         :index="obj.index"
+        :current="player_index"
       />
     </div>
   </div>
@@ -43,30 +44,35 @@ import Players from './components/Player.vue'
 const current_round = ref(1)
 const player_index = ref(0)
 const dart_count = ref(0)
+const dart_record = ref([
+  ['', ''],
+  ['', ''],
+  ['', '']
+])
 const player = ref([
   {
-    index: 1,
+    index: 0,
     name: 'Jimmy',
-    score: 301,
+    score: 30,
     finished: false,
     detail: []
   },
   {
-    index: 2,
+    index: 1,
     name: 'Jeff',
     score: 301,
     finished: false,
     detail: []
   },
   {
-    index: 3,
+    index: 2,
     name: 'HAHAHA',
     score: 301,
     finished: false,
     detail: []
   },
   {
-    index: 4,
+    index: 3,
     name: 'Dark Night',
     score: 301,
     finished: false,
@@ -87,17 +93,63 @@ function next_player() {
   }
 }
 
-function roundHandle(score) {
-  console.log(score)
+function game_over() {
+  if (current_round.value == 10 && player_index.value == 3) {
+    console.log('No one finish')
+  }
+  if (player.value[player_index.value].score == 0) {
+    console.log('Game over')
+  }
+}
+
+function round_handle(s, m) {
+  // console.log(s, m)
+  if (dart_count.value == 0) {
+    dart_record.value = [
+      ['', ''],
+      ['', ''],
+      ['', '']
+    ]
+  }
+  if (s == 50) {
+    dart_record.value[dart_count.value][0] = 'Bull Eye !!!'
+  } else if (m == 1) {
+    dart_record.value[dart_count.value][0] = 'Single'
+    dart_record.value[dart_count.value][1] = s
+  } else if (m == 2) {
+    dart_record.value[dart_count.value][0] = 'Double'
+    dart_record.value[dart_count.value][1] = s
+  } else if (m == 3) {
+    dart_record.value[dart_count.value][0] = 'Triple'
+    dart_record.value[dart_count.value][1] = s
+  }
+  const score = s * m
   dart_count.value += 1
-  player.value[player_index.value].score += score
+  let reserve = player.value[player_index.value].score
+  let reserve_index = player_index.value
+  player.value[player_index.value].score -= score
+  if (player.value[player_index.value].score < 0) {
+    setTimeout(() => {
+      player.value[reserve_index].score = reserve
+    }, 2000)
+  }
   let round_index = current_round.value - 1
   player.value[player_index.value].detail[round_index][dart_count.value] = score
+
+  game_over()
 
   if (dart_count.value == 3) {
     next_player()
     dart_count.value = 0
   }
+}
+
+function back() {
+  console.log('back')
+}
+
+function reset() {
+  console.log('reset')
 }
 
 onMounted(() => {
@@ -199,5 +251,6 @@ onMounted(() => {
   width: 95%;
   display: flex;
   justify-content: space-around;
+  align-items: end;
 }
 </style>
