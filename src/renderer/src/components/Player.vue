@@ -55,26 +55,26 @@ function get_style() {
     color: #dedccf;
     font-size: 20px;
     font-weight: 600;
-    line-height: 60px;
+    line-height: 50px;
     width: 100%;
     display: flex;
     justify-content: center;
     white-space: nowrap;
+    padding-bottom: 5px;
   }
 
   .score-wrapper {
     position: relative;
     color: #dddbce;
-    font-family: 'Itim-Regular', Helvetica;
     font-size: 64px;
-    font-weight: 400;
+    font-weight: 600;
     line-height: 50px;
     text-align: center;
-    margin: 5px;
+    padding-bottom: 20px;
   }
 
   .icon {
-    font-size: 1.8em;
+    font-size: 2em;
     padding: 8px;
   }
 }

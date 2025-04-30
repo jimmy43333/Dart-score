@@ -1,15 +1,63 @@
 <template>
   <div class="out-box">
-    <div class="board-box">
+    <div v-if="!active" class="setting-box">
+      <div class="title">Dart Score</div>
+      <div class="options">
+        <div class="option-title">Players</div>
+        <div class="option-value">
+          <ion-icon
+            :icon="chevronBackCircleOutline"
+            class="icon"
+            @click="change_index('players', player_option.length, false)"
+          />
+          <div class="value-text">{{ player_option[index.players] }}</div>
+          <ion-icon
+            :icon="chevronForwardCircleOutline"
+            class="icon"
+            @click="change_index('players', player_option.length, true)"
+          />
+        </div>
+        <div class="option-title">Score</div>
+        <div class="option-value">
+          <ion-icon
+            :icon="chevronBackCircleOutline"
+            class="icon"
+            @click="change_index('score', score_option.length, false)"
+          />
+          <div class="value-text">{{ score_option[index.score] }}</div>
+          <ion-icon
+            :icon="chevronForwardCircleOutline"
+            class="icon"
+            @click="change_index('score', score_option.length, true)"
+          />
+        </div>
+        <div class="option-title">Round</div>
+        <div class="option-value">
+          <ion-icon
+            :icon="chevronBackCircleOutline"
+            class="icon"
+            @click="change_index('round', round_option.length, false)"
+          />
+          <div class="value-text">{{ round_option[index.round] }}</div>
+          <ion-icon
+            :icon="chevronForwardCircleOutline"
+            class="icon"
+            @click="change_index('round', round_option.length, true)"
+          />
+        </div>
+      </div>
+      <div class="start-button" @click="start">START</div>
+    </div>
+    <div v-if="active" class="board-box">
       <Board @update_score="round_handle" />
     </div>
-    <div class="nav-box">
+    <div v-if="active" class="nav-box">
       <div class="overlap-1">
         <ion-icon :icon="reloadOutline" class="icon" @click="back()" />
         <ion-icon :icon="exitOutline" class="icon" @click="reset()" />
       </div>
       <div class="overlap-2">
-        <div class="text-wrapper">Round {{ current_round }}/10</div>
+        <div class="text-wrapper">Round {{ current_round }}/ {{ round_option[index.round] }}</div>
       </div>
       <div class="overlap-3">
         <div class="text-wrapper">{{ dart_record[0][0] }} {{ dart_record[0][1] }}</div>
@@ -28,82 +76,101 @@
         :name="obj.name"
         :score="obj.score"
         :index="obj.index"
-        :current="player_index"
+        :current="index.current_player"
       />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { IonIcon } from '@ionic/vue'
-import { exitOutline, reloadOutline } from 'ionicons/icons'
+import {
+  exitOutline,
+  reloadOutline,
+  chevronBackCircleOutline,
+  chevronForwardCircleOutline
+} from 'ionicons/icons'
 import Board from './components/Board.vue'
 import Players from './components/Player.vue'
 // const ipcHandle = () => window.electron.ipcRenderer.send('ping')
+const active = ref(false)
+const player_option = ref([2, 3, 4])
+const score_option = ref([301, 501, 701, 901])
+const round_option = ref([1, 5, 10, 15, 20])
+const index = ref({
+  players: 2,
+  score: 0,
+  round: 2,
+  current_player: 5
+})
 const current_round = ref(1)
-const player_index = ref(0)
 const dart_count = ref(0)
 const dart_record = ref([
   ['', ''],
   ['', ''],
   ['', '']
 ])
-const player = ref([
-  {
-    index: 0,
-    name: 'Jimmy',
-    score: 30,
-    finished: false,
-    detail: []
-  },
-  {
-    index: 1,
-    name: 'Jeff',
-    score: 301,
-    finished: false,
-    detail: []
-  },
-  {
-    index: 2,
-    name: 'HAHAHA',
-    score: 301,
-    finished: false,
-    detail: []
-  },
-  {
-    index: 3,
-    name: 'Dark Night',
-    score: 301,
-    finished: false,
-    detail: []
+
+const player = computed(() => {
+  let output = []
+  for (let i = 0; i < player_option.value[index.value.players]; i++) {
+    let tmp = {}
+    tmp['index'] = i
+    tmp['name'] = `Player ${i + 1}`
+    tmp['score'] = score_option.value[index.value.score]
+    tmp['detail'] = []
+    output.push({ ...tmp })
   }
-])
+  return output
+})
+
+function change_index(key, total_length, add = true) {
+  let tmp = index.value[key]
+  if (add) {
+    tmp += 1
+    if (tmp == total_length) {
+      tmp = 0
+    }
+  } else {
+    tmp -= 1
+    if (tmp < 0) {
+      tmp = total_length - 1
+    }
+  }
+  index.value[key] = tmp
+}
 
 function next_player() {
-  player_index.value += 1
-  if (player_index.value == 4) {
+  const total = player_option.value[index.value.players]
+  index.value.current_player += 1
+  if (index.value.current_player == total) {
     current_round.value += 1
   }
-  player_index.value = player_index.value % 4
-  if (!player.value[player_index.value].finished) {
-    return player_index.value
+  index.value.current_player = index.value.current_player % total
+  if (player.value[index.value.current_player].score != 0) {
+    return index.value.current_player
   } else {
     next_player()
   }
 }
 
 function game_over() {
-  if (current_round.value == 10 && player_index.value == 3) {
-    console.log('No one finish')
+  if (index.value.current_player == 3 && dart_count.value == 3) {
+    const winner = player.value.filter((item) => item.score === 0).map((item) => item.name)
+    if (winner.length > 0) {
+      console.log(winner)
+      return true
+    }
+    if (current_round.value == round_option.value[index.value.round]) {
+      console.log('No one finish')
+      return true
+    }
   }
-  if (player.value[player_index.value].score == 0) {
-    console.log('Game over')
-  }
+  return false
 }
 
 function round_handle(s, m) {
-  // console.log(s, m)
   if (dart_count.value == 0) {
     dart_record.value = [
       ['', ''],
@@ -125,20 +192,28 @@ function round_handle(s, m) {
   }
   const score = s * m
   dart_count.value += 1
-  let reserve = player.value[player_index.value].score
-  let reserve_index = player_index.value
-  player.value[player_index.value].score -= score
-  if (player.value[player_index.value].score < 0) {
+  let reserve = player.value[index.value.current_player].score
+  let reserve_index = index.value.current_player
+  player.value[index.value.current_player].score -= score
+  //let round_index = current_round.value - 1
+  //player.value[index.value.current_player].detail[round_index][dart_count.value] = score
+
+  if (game_over()) {
+    return
+  }
+
+  if (player.value[index.value.current_player].score < 0) {
     setTimeout(() => {
       player.value[reserve_index].score = reserve
+      next_player()
+      dart_count.value = 0
     }, 2000)
-  }
-  let round_index = current_round.value - 1
-  player.value[player_index.value].detail[round_index][dart_count.value] = score
-
-  game_over()
-
-  if (dart_count.value == 3) {
+  } else if (player.value[index.value.current_player].score == 0) {
+    setTimeout(() => {
+      next_player()
+      dart_count.value = 0
+    }, 2000)
+  } else if (dart_count.value == 3) {
     next_player()
     dart_count.value = 0
   }
@@ -150,16 +225,17 @@ function back() {
 
 function reset() {
   console.log('reset')
+  active.value = false
+  index.value.current_player = 5
+}
+
+function start() {
+  active.value = true
+  index.value.current_player = 0
 }
 
 onMounted(() => {
-  let result = []
-  for (let i = 1; i <= 10; i++) {
-    result.push([i, '', '', ''])
-  }
-  for (let ele of player.value) {
-    ele.detail = JSON.parse(JSON.stringify(result))
-  }
+  console.log('Mounted')
 })
 </script>
 <style lang="less">
@@ -167,6 +243,92 @@ onMounted(() => {
   display: flex;
   background-color: antiquewhite;
   justify-content: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.setting-box {
+  width: 100%;
+  height: 80%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+
+  .title {
+    height: 100px;
+    font-size: 60px;
+    font-weight: 600;
+    letter-spacing: 5px;
+    background-color: rgba(#ffffff, 0.1);
+    border-radius: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .options {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .option-title {
+    background-color: rgba(#e5a9ff, 0.1);
+    font-size: 30px;
+    padding: 10px;
+    text-align: center;
+    font-weight: 600;
+    border-radius: 20px;
+  }
+
+  .option-value {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 200px;
+  }
+
+  .value-text {
+    font-size: 30px;
+    line-height: 60px;
+    font-weight: 600;
+    text-align: center;
+    background-color: #3d3c3c;
+    width: 200px;
+    border-radius: 20px;
+  }
+
+  .icon {
+    width: 100px;
+    font-size: 3em;
+    margin: 5px;
+    color: rgba(#e5a9ff, 0.3);
+    background-color: rgba(#3d3c3c, 0.8);
+    border-radius: 15px;
+    padding: 3px;
+    cursor: pointer;
+    &:hover {
+      transform: scale(1.2);
+    }
+  }
+
+  .start-button {
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: 5px;
+    background-color: #999999;
+    margin: 20px;
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    &:hover {
+      background-color: rgba(#e5a9ff, 0.3);
+    }
+  }
 }
 
 .board-box {
@@ -180,6 +342,7 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
+  animation: slideLeft 1s ease forwards;
 }
 
 .nav-box {
@@ -191,6 +354,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: end;
+  animation: slideRight 1s ease forwards;
 }
 
 .overlap-1 {
@@ -252,5 +416,27 @@ onMounted(() => {
   display: flex;
   justify-content: space-around;
   align-items: end;
+}
+
+@keyframes slideLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 </style>
