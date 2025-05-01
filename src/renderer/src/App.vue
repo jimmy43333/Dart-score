@@ -1,55 +1,57 @@
 <template>
   <div class="out-box">
-    <div v-if="!active" class="setting-box">
-      <div class="title">Dart Score</div>
-      <div class="options">
-        <div class="option-title">Players</div>
-        <div class="option-value">
-          <ion-icon
-            :icon="chevronBackCircleOutline"
-            class="icon"
-            @click="change_index('players', player_option.length, false)"
-          />
-          <div class="value-text">{{ player_option[index.players] }}</div>
-          <ion-icon
-            :icon="chevronForwardCircleOutline"
-            class="icon"
-            @click="change_index('players', player_option.length, true)"
-          />
+    <transition name="slide-up">
+      <div v-if="!active" class="setting-box">
+        <div class="title">Dart Score</div>
+        <div class="options">
+          <div class="option-title">Players</div>
+          <div class="option-value">
+            <ion-icon
+              :icon="chevronBackCircleOutline"
+              class="icon"
+              @click="change_index('players', player_option.length, false)"
+            />
+            <div class="value-text">{{ player_option[index.players] }}</div>
+            <ion-icon
+              :icon="chevronForwardCircleOutline"
+              class="icon"
+              @click="change_index('players', player_option.length, true)"
+            />
+          </div>
+          <div class="option-title">Score</div>
+          <div class="option-value">
+            <ion-icon
+              :icon="chevronBackCircleOutline"
+              class="icon"
+              @click="change_index('score', score_option.length, false)"
+            />
+            <div class="value-text">{{ score_option[index.score] }}</div>
+            <ion-icon
+              :icon="chevronForwardCircleOutline"
+              class="icon"
+              @click="change_index('score', score_option.length, true)"
+            />
+          </div>
+          <div class="option-title">Round</div>
+          <div class="option-value">
+            <ion-icon
+              :icon="chevronBackCircleOutline"
+              class="icon"
+              @click="change_index('round', round_option.length, false)"
+            />
+            <div class="value-text">{{ round_option[index.round] }}</div>
+            <ion-icon
+              :icon="chevronForwardCircleOutline"
+              class="icon"
+              @click="change_index('round', round_option.length, true)"
+            />
+          </div>
         </div>
-        <div class="option-title">Score</div>
-        <div class="option-value">
-          <ion-icon
-            :icon="chevronBackCircleOutline"
-            class="icon"
-            @click="change_index('score', score_option.length, false)"
-          />
-          <div class="value-text">{{ score_option[index.score] }}</div>
-          <ion-icon
-            :icon="chevronForwardCircleOutline"
-            class="icon"
-            @click="change_index('score', score_option.length, true)"
-          />
-        </div>
-        <div class="option-title">Round</div>
-        <div class="option-value">
-          <ion-icon
-            :icon="chevronBackCircleOutline"
-            class="icon"
-            @click="change_index('round', round_option.length, false)"
-          />
-          <div class="value-text">{{ round_option[index.round] }}</div>
-          <ion-icon
-            :icon="chevronForwardCircleOutline"
-            class="icon"
-            @click="change_index('round', round_option.length, true)"
-          />
-        </div>
+        <div class="start-button" @click="start">START</div>
       </div>
-      <div class="start-button" @click="start">START</div>
-    </div>
+    </transition>
     <div v-if="active" class="board-box">
-      <Board @update_score="round_handle" />
+      <Board :score="player[index.current_player].score" @update_score="score_computed" />
     </div>
     <div v-if="active" class="nav-box">
       <div class="overlap-1">
@@ -95,6 +97,7 @@ import Board from './components/Board.vue'
 import Players from './components/Player.vue'
 // const ipcHandle = () => window.electron.ipcRenderer.send('ping')
 const active = ref(false)
+const score_board_lock = ref(false)
 const player_option = ref([2, 3, 4])
 const score_option = ref([301, 501, 701, 901])
 const round_option = ref([1, 5, 10, 15, 20])
@@ -148,29 +151,34 @@ function next_player() {
     current_round.value += 1
   }
   index.value.current_player = index.value.current_player % total
-  if (player.value[index.value.current_player].score != 0) {
-    return index.value.current_player
-  } else {
-    next_player()
-  }
+  // if (player.value[index.value.current_player].score != 0) {
+  //   return index.value.current_player
+  // } else {
+  //   next_player()
+  // }
+  return index.value.current_player
 }
 
-function game_over() {
-  if (index.value.current_player == 3 && dart_count.value == 3) {
+function judge_game_over() {
+  if (index.value.current_player == 0 && dart_count.value == 0) {
+    console.log('Judge Game Over')
     const winner = player.value.filter((item) => item.score === 0).map((item) => item.name)
     if (winner.length > 0) {
       console.log(winner)
-      return true
+      return
     }
-    if (current_round.value == round_option.value[index.value.round]) {
+    if (current_round.value - 1 == round_option.value[index.value.round]) {
       console.log('No one finish')
-      return true
+      return
     }
   }
-  return false
+  score_board_lock.value = false
 }
 
-function round_handle(s, m) {
+function score_computed(s, m) {
+  if (score_board_lock.value) {
+    return
+  }
   if (dart_count.value == 0) {
     dart_record.value = [
       ['', ''],
@@ -198,24 +206,26 @@ function round_handle(s, m) {
   //let round_index = current_round.value - 1
   //player.value[index.value.current_player].detail[round_index][dart_count.value] = score
 
-  if (game_over()) {
-    return
-  }
-
   if (player.value[index.value.current_player].score < 0) {
+    score_board_lock.value = true
     setTimeout(() => {
       player.value[reserve_index].score = reserve
       next_player()
       dart_count.value = 0
+      judge_game_over()
     }, 2000)
   } else if (player.value[index.value.current_player].score == 0) {
+    score_board_lock.value = true
     setTimeout(() => {
       next_player()
       dart_count.value = 0
+      judge_game_over()
     }, 2000)
   } else if (dart_count.value == 3) {
+    score_board_lock.value = true
     next_player()
     dart_count.value = 0
+    judge_game_over()
   }
 }
 
@@ -226,7 +236,19 @@ function back() {
 function reset() {
   console.log('reset')
   active.value = false
+  current_round.value = 1
+  dart_count.value = 0
+  dart_record.value = [
+    ['', ''],
+    ['', ''],
+    ['', '']
+  ]
   index.value.current_player = 5
+  for (const key in player.value) {
+    if ('score' in player.value[key]) {
+      player.value[key].score = score_option.value[index.value.score]
+    }
+  }
 }
 
 function start() {
@@ -335,9 +357,10 @@ onMounted(() => {
   width: 65%;
   height: 65%;
   position: absolute;
-  top: 30px;
-  left: 30px;
-  background-color: rgb(93, 93, 93);
+  top: 20px;
+  left: 20px;
+  background-color: rgba(93, 93, 93, 0.2);
+  border-radius: 50px;
   overflow: hidden;
   display: flex;
   justify-content: center;
@@ -438,5 +461,31 @@ onMounted(() => {
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+/* Entering (optional) */
+.slide-up-enter-from {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+.slide-up-enter-to {
+  transform: translateY(0);
+  opacity: 1;
+}
+.slide-up-enter-active {
+  transition: all 1s ease;
+}
+
+/* Leaving */
+.slide-up-leave-from {
+  transform: translateY(0);
+  opacity: 1;
+}
+.slide-up-leave-to {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+.slide-up-leave-active {
+  transition: all 1s ease;
 }
 </style>

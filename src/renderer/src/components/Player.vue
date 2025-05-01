@@ -1,22 +1,33 @@
 <template>
   <div :class="get_class()" :style="get_style()">
     <ion-icon :icon="person" class="icon" />
-    <div class="text-wrapper">{{ name }}</div>
+    <input
+      v-if="modify_name"
+      v-model="player_name"
+      class="input-wrapper"
+      @dblclick.prevent="modify_name = !modify_name"
+      @keyup.enter="modify_name = !modify_name"
+    />
+    <div v-else class="text-wrapper" @dblclick.prevent="modify_name = !modify_name">
+      {{ player_name }}
+    </div>
     <div class="score-wrapper">{{ score }}</div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { IonIcon } from '@ionic/vue'
 import { person } from 'ionicons/icons'
 const props = defineProps({
   index: Number,
   name: String,
-  current: Boolean,
   score: Number,
   current: Number
 })
+
+const modify_name = ref(false)
+const player_name = ref('')
 
 function get_class() {
   if (props.score < 0) {
@@ -39,13 +50,17 @@ function get_style() {
     return 'background-color: #2d2d59;'
   }
 }
+
+onMounted(() => {
+  player_name.value = props.name
+})
 </script>
 <style lang="less">
 .player {
   border-radius: 10px 10px 0px 0px;
   position: relative;
   width: 150px;
-  height: 170px;
+  height: 160px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -55,7 +70,6 @@ function get_style() {
     color: #dedccf;
     font-size: 20px;
     font-weight: 600;
-    line-height: 50px;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -63,12 +77,27 @@ function get_style() {
     padding-bottom: 5px;
   }
 
+  .input-wrapper {
+    position: relative;
+    color: #e5a9ff;
+    background-color: #323232;
+    border: none;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: 600;
+    width: 80%;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 10px;
+  }
+
   .score-wrapper {
     position: relative;
     color: #dddbce;
     font-size: 64px;
     font-weight: 600;
-    line-height: 50px;
+    line-height: 30px;
     text-align: center;
     padding-bottom: 20px;
   }
@@ -80,7 +109,7 @@ function get_style() {
 }
 
 .player-current {
-  height: 200px;
+  height: 190px;
   box-shadow: 0 0px 20px rgb(254, 255, 236);
 }
 

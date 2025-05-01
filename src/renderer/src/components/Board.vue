@@ -3,25 +3,25 @@
     <div v-for="(ele, index) in points" :key="index">
       <div
         :class="index % 2 == 0 ? 'area area-odd' : 'area area-even'"
-        :style="board_style(index)"
+        :style="board_style(index, 1)"
         @click="update(ele, 1)"
       ></div>
       <div
         :class="index % 2 == 0 ? 'double-area double-area-odd' : 'double-area double-area-even'"
-        :style="board_style(index)"
+        :style="board_style(index, 2)"
         @click="update(ele, 2)"
       >
         {{ ele }}
       </div>
       <div
         :class="index % 2 == 0 ? 'triple-area triple-area-odd' : 'triple-area triple-area-even'"
-        :style="board_style(index)"
+        :style="board_style(index, 3)"
         @click="update(ele, 3)"
       ></div>
     </div>
     <!-- <div class="bulleye_border"></div> -->
     <div class="bulleye">
-      <div class="bulleye-center" @click="update(50, 1)">50</div>
+      <div class="bulleye-center" :style="bull_style()" @click="update(50, 1)">50</div>
     </div>
     <div class="area-zero" @click="update(0, 0)">0</div>
   </div>
@@ -29,12 +29,31 @@
 <script setup>
 import { ref } from 'vue'
 const emit = defineEmits(['update_score'])
+const props = defineProps({
+  score: Number
+})
 const points = ref([20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5])
-// const points = ref([20, 1])
-function board_style(i) {
+
+function board_style(i, multiple) {
+  const p = points.value[i] * multiple
+  if (props.score == p) {
+    return {
+      transform: `rotate(${Number.parseInt(i) * 18}deg)`,
+      '-webkit-transform': `rotate(${i * 20} deg)`,
+      background: 'yellowgreen'
+    }
+  }
   return {
     transform: `rotate(${Number.parseInt(i) * 18}deg)`,
     '-webkit-transform': `rotate(${i * 20} deg)`
+  }
+}
+
+function bull_style() {
+  if (props.score == 50) {
+    return {
+      background: 'yellowgreen'
+    }
   }
 }
 
@@ -163,7 +182,7 @@ function update(s, m) {
 .triple-area:hover,
 .bulleye-center:hover,
 .area-zero:hover {
-  background-color: rgb(33, 103, 63);
+  background-color: rgb(23, 77, 0);
   cursor: pointer;
 }
 </style>
