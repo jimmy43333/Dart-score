@@ -82,6 +82,13 @@
       />
     </div>
   </div>
+  <transition name="pop-up">
+    <div v-if="show_winner" class="winner-box">
+      <div class="text-wrapper">WINNER !!</div>
+      <div class="player-wrapper">{{ winner }}</div>
+      <ion-icon :icon="thumbsUp" class="icon" @click="show_winner = false" />
+    </div>
+  </transition>
 </template>
 
 <script setup>
@@ -91,12 +98,15 @@ import {
   exitOutline,
   reloadOutline,
   chevronBackCircleOutline,
-  chevronForwardCircleOutline
+  chevronForwardCircleOutline,
+  thumbsUp
 } from 'ionicons/icons'
 import Board from './components/Board.vue'
 import Players from './components/Player.vue'
 // const ipcHandle = () => window.electron.ipcRenderer.send('ping')
 const active = ref(false)
+const show_winner = ref(false)
+const winner = ref('Jimmy, Jeff')
 const score_board_lock = ref(false)
 const player_option = ref([2, 3, 4])
 const score_option = ref([301, 501, 701, 901])
@@ -162,9 +172,10 @@ function next_player() {
 function judge_game_over() {
   if (index.value.current_player == 0 && dart_count.value == 0) {
     console.log('Judge Game Over')
-    const winner = player.value.filter((item) => item.score === 0).map((item) => item.name)
-    if (winner.length > 0) {
-      console.log(winner)
+    const w = player.value.filter((item) => item.score === 0).map((item) => item.name)
+    if (w.length > 0) {
+      winner.value = w.toString()
+      show_winner.value = true
       return
     }
     if (current_round.value - 1 == round_option.value[index.value.round]) {
@@ -187,7 +198,7 @@ function score_computed(s, m) {
     ]
   }
   if (s == 50) {
-    dart_record.value[dart_count.value][0] = 'Bull Eye !!!'
+    dart_record.value[dart_count.value][0] = 'Bull Eye'
   } else if (m == 1) {
     dart_record.value[dart_count.value][0] = 'Single'
     dart_record.value[dart_count.value][1] = s
@@ -230,11 +241,25 @@ function score_computed(s, m) {
 }
 
 function back() {
-  console.log('back')
+  if (dart_count.value > 0) {
+    dart_count.value -= 1
+    let s = 0
+    if (dart_record.value[dart_count.value][0] == 'Bull Eye') {
+      s = 50
+    } else if (dart_record.value[dart_count.value][0] == 'Single') {
+      s = dart_record.value[dart_count.value][1]
+    } else if (dart_record.value[dart_count.value][0] == 'Double') {
+      s = dart_record.value[dart_count.value][1] * 2
+    } else if (dart_record.value[dart_count.value][0] == 'Triple') {
+      s = dart_record.value[dart_count.value][1] * 3
+    }
+    player.value[index.value.current_player].score += s
+    dart_record.value[dart_count.value] = ['', '']
+    console.log(player.value[index.value.current_player].score)
+  }
 }
 
 function reset() {
-  console.log('reset')
   active.value = false
   current_round.value = 1
   dart_count.value = 0
@@ -249,6 +274,7 @@ function reset() {
       player.value[key].score = score_option.value[index.value.score]
     }
   }
+  score_board_lock.value = false
 }
 
 function start() {
@@ -348,7 +374,51 @@ onMounted(() => {
     cursor: pointer;
     transition: background-color 0.3s ease;
     &:hover {
-      background-color: rgba(#e5a9ff, 0.3);
+      background: repeating-radial-gradient(circle, rgba(#c3dc99, 0.3) 20%, rgba(#e5a9ff, 0.3) 40%);
+      background-size: 100% 100%;
+      animation: gradientSizeAnimation 2s ease infinite;
+      background-position: 50% 50%;
+    }
+  }
+}
+
+.winner-box {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(#111111, 0.4);
+  backdrop-filter: blur(20px);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  .text-wrapper {
+    font-size: 70px;
+    font-weight: 600;
+    color: orange;
+    background-color: rgba(tomato, 0.2);
+    margin: 20px;
+    padding: 10px;
+    border-radius: 10px;
+    width: 60%;
+    height: 80px;
+    text-align: center;
+  }
+
+  .player-wrapper {
+    font-size: 40px;
+  }
+
+  .icon {
+    font-size: 3em;
+    margin: 50px;
+    color: azure;
+    &:hover {
+      transform: scale(1.5);
     }
   }
 }
@@ -439,6 +509,19 @@ onMounted(() => {
   display: flex;
   justify-content: space-around;
   align-items: end;
+}
+
+/* 定義漸變動畫 */
+@keyframes gradientSizeAnimation {
+  0% {
+    background-size: 100% 100%;
+  }
+  50% {
+    background-size: 250% 250%;
+  }
+  100% {
+    background-size: 500% 500%;
+  }
 }
 
 @keyframes slideLeft {

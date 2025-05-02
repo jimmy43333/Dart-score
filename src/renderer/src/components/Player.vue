@@ -32,6 +32,8 @@ const player_name = ref('')
 function get_class() {
   if (props.score < 0) {
     return 'player player-break'
+  } else if (props.score == 0) {
+    return 'player winner'
   } else if (props.index == props.current) {
     return 'player player-current'
   } else {
@@ -64,10 +66,11 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  color: #dedccf;
 
   .text-wrapper {
     position: relative;
-    color: #dedccf;
+    color: inherit;
     font-size: 20px;
     font-weight: 600;
     width: 100%;
@@ -94,7 +97,7 @@ onMounted(() => {
 
   .score-wrapper {
     position: relative;
-    color: #dddbce;
+    color: inherit;
     font-size: 64px;
     font-weight: 600;
     line-height: 30px;
@@ -128,5 +131,25 @@ onMounted(() => {
   background-size: cover;
   background-repeat: no-repeat;
   z-index: 1;
+}
+
+.winner {
+  background: linear-gradient(120deg, rgba(#a8e6cf, 0.4), rgba(#402827, 0.5));
+  background-size: 300% 300%;
+  animation: gradientPositionAnimation 3s ease infinite;
+  color: goldenrod;
+}
+
+/* 定義漸變動畫 */
+@keyframes gradientPositionAnimation {
+  0% {
+    background-position: 0% 10%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 10%;
+  }
 }
 </style>
