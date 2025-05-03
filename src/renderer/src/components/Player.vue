@@ -3,7 +3,7 @@
     <ion-icon :icon="person" class="icon" />
     <input
       v-if="modify_name"
-      v-model="player_name"
+      v-model.lazy="player_name"
       class="input-wrapper"
       @dblclick.prevent="modify_name = !modify_name"
       @keyup.enter="modify_name = !modify_name"
@@ -16,9 +16,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { IonIcon } from '@ionic/vue'
 import { person } from 'ionicons/icons'
+const emit = defineEmits(['update_player_name'])
 const props = defineProps({
   index: Number,
   name: String,
@@ -55,6 +56,9 @@ function get_style() {
 
 onMounted(() => {
   player_name.value = props.name
+  watch(player_name, (newVal) => {
+    emit('update_player_name', props.index, newVal)
+  })
 })
 </script>
 <style lang="less">

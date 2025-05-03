@@ -55,6 +55,7 @@
     </div>
     <div v-if="active" class="nav-box">
       <div class="overlap-1">
+        <ion-icon :icon="heartDislikeCircleOutline" class="icon" @click="score_computed(0, 0)" />
         <ion-icon :icon="reloadOutline" class="icon" @click="back()" />
         <ion-icon :icon="exitOutline" class="icon" @click="reset()" />
       </div>
@@ -79,6 +80,7 @@
         :score="obj.score"
         :index="obj.index"
         :current="index.current_player"
+        @update_player_name="change_name"
       />
     </div>
   </div>
@@ -99,14 +101,15 @@ import {
   reloadOutline,
   chevronBackCircleOutline,
   chevronForwardCircleOutline,
-  thumbsUp
+  thumbsUp,
+  heartDislikeCircleOutline
 } from 'ionicons/icons'
 import Board from './components/Board.vue'
 import Players from './components/Player.vue'
 // const ipcHandle = () => window.electron.ipcRenderer.send('ping')
 const active = ref(false)
 const show_winner = ref(false)
-const winner = ref('Jimmy, Jeff')
+const winner = ref('')
 const score_board_lock = ref(false)
 const player_option = ref([2, 3, 4])
 const score_option = ref([301, 501, 701, 901])
@@ -124,7 +127,6 @@ const dart_record = ref([
   ['', ''],
   ['', '']
 ])
-
 const player = computed(() => {
   let output = []
   for (let i = 0; i < player_option.value[index.value.players]; i++) {
@@ -137,6 +139,7 @@ const player = computed(() => {
   }
   return output
 })
+const reserve_score = ref(0)
 
 function change_index(key, total_length, add = true) {
   let tmp = index.value[key]
@@ -152,6 +155,11 @@ function change_index(key, total_length, add = true) {
     }
   }
   index.value[key] = tmp
+}
+
+function change_name(index, n) {
+  console.log(`UPDATE ${index} ${n}`)
+  player.value[index].name = n
 }
 
 function next_player() {
@@ -190,12 +198,14 @@ function score_computed(s, m) {
   if (score_board_lock.value) {
     return
   }
+  let reserve_index = index.value.current_player
   if (dart_count.value == 0) {
     dart_record.value = [
       ['', ''],
       ['', ''],
       ['', '']
     ]
+    reserve_score.value = player.value[index.value.current_player].score
   }
   if (s == 50) {
     dart_record.value[dart_count.value][0] = 'Bull Eye'
@@ -208,11 +218,11 @@ function score_computed(s, m) {
   } else if (m == 3) {
     dart_record.value[dart_count.value][0] = 'Triple'
     dart_record.value[dart_count.value][1] = s
+  } else {
+    dart_record.value[dart_count.value][0] = 'Zero'
   }
   const score = s * m
   dart_count.value += 1
-  let reserve = player.value[index.value.current_player].score
-  let reserve_index = index.value.current_player
   player.value[index.value.current_player].score -= score
   //let round_index = current_round.value - 1
   //player.value[index.value.current_player].detail[round_index][dart_count.value] = score
@@ -220,7 +230,7 @@ function score_computed(s, m) {
   if (player.value[index.value.current_player].score < 0) {
     score_board_lock.value = true
     setTimeout(() => {
-      player.value[reserve_index].score = reserve
+      player.value[reserve_index].score = reserve_score.value
       next_player()
       dart_count.value = 0
       judge_game_over()
@@ -453,7 +463,7 @@ onMounted(() => {
 .overlap-1 {
   background-color: #3d3c3c;
   border-radius: 10px 0px 0px 10px;
-  width: 120px;
+  width: 150px;
   height: 50px;
   padding: 10px;
   margin: 5px;
@@ -466,6 +476,10 @@ onMounted(() => {
 
     &:hover {
       transform: scale(1.2);
+    }
+
+    &:active {
+      color: #e5a9ff;
     }
   }
 }
